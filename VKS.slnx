@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="VKStest.runsettings" />
+  </Folder>
+  <Project Path="../VKSLibrary/VKSLibrary.csproj" Id="63176c5a-cc85-4851-bc31-31b70e740606" />
+  <Project Path="VKS_Tests.csproj" />
+</Solution>

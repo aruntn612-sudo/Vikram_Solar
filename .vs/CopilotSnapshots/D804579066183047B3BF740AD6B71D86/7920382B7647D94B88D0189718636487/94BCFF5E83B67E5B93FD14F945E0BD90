@@ -1,0 +1,105 @@
+﻿using Microsoft.Playwright;
+using NUnit.Framework;
+using System.Text.RegularExpressions;
+
+namespace Vikram_Solar
+{
+    [Parallelizable(ParallelScope.Self)]
+    [TestFixture]
+    public class DiagnosticTests : PageTest
+    {
+        /// <summary>
+        /// This test helps identify the correct selectors for menu items on the website
+        /// Run this to understand the actual page structure
+        /// </summary>
+        [Test]
+        public async Task DiagnoseMenuStructure()
+        {
+            await Page.GotoAsync("https://www.vsvikramsolar.in/");
+
+            // Wait for page to load
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Additional wait for dynamic content
+            await Page.WaitForTimeoutAsync(2000);
+
+            // Take screenshot
+            await Page.ScreenshotAsync(new PageScreenshotOptions { Path = "diagnostic_screenshot.png" });
+            Console.WriteLine("Screenshot saved: diagnostic_screenshot.png");
+
+            // 1. Check for any elements with test IDs
+            var testIdElements = await Page.Locator("[data-testid]").CountAsync();
+            Console.WriteLine($"\n[1] Elements with data-testid: {testIdElements}");
+            if (testIdElements > 0)
+            {
+                var testIds = await Page.Locator("[data-testid]").AllTextContentsAsync();
+                foreach(var id in testIds)
+                {
+                    Console.WriteLine($"    - Found testid element");
+                }
+            }
+
+            // 2. Look for "About" link by text
+            Console.WriteLine($"\n[2] Searching for 'About' text in page...");
+            var aboutLinks = await Page.Locator("text=/About/i").CountAsync();
+            Console.WriteLine($"    Elements containing 'About': {aboutLinks}");
+
+            // 3. Check for nav/menu elements
+            Console.WriteLine($"\n[3] Nav elements found:");
+            var navs = await Page.Locator("nav").CountAsync();
+            Console.WriteLine($"    <nav> elements: {navs}");
+
+            // 4. Check for links in general
+            var allLinks = await Page.Locator("a").CountAsync();
+            Console.WriteLine($"    All <a> tags: {allLinks}");
+
+            // 5. Get all links with their text and href
+            Console.WriteLine($"\n[4] All visible links:");
+            var links = await Page.Locator("a").AllAsync();
+            int linkCount = 0;
+            foreach (var link in links.Take(30)) // Limit output to first 30
+            {
+                try
+                {
+                    var text = await link.TextContentAsync();
+                    var href = await link.GetAttributeAsync("href");
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        linkCount++;
+                        Console.WriteLine($"    [{linkCount}] Text: '{text?.Trim()}' | Href: {href}");
+                    }
+                }
+                catch { /* Skip errors */ }
+            }
+
+            // 6. Look for menu container patterns
+            Console.WriteLine($"\n[5] Potential menu containers:");
+            var menus = await Page.Locator("[class*='menu'], [class*='nav'], [id*='menu'], [id*='nav']").CountAsync();
+            Console.WriteLine($"    Elements with menu/nav in class/id: {menus}");
+
+            // 7. Check page title and URL
+            var title = await Page.TitleAsync();
+            var url = Page.Url;
+            Console.WriteLine($"\n[6] Page Info:");
+            Console.WriteLine($"    Title: {title}");
+            Console.WriteLine($"    URL: {url}");
+
+            // 8. Try to find the specific "About Us" link
+            Console.WriteLine($"\n[7] Searching for 'About Us' specifically:");
+            var aboutUsLinks = await Page.Locator("text=About Us").CountAsync();
+            Console.WriteLine($"    'About Us' text matches: {aboutUsLinks}");
+
+            if (aboutUsLinks > 0)
+            {
+                Console.WriteLine("    ✓ Found 'About Us' link - use: Page.Locator(\"text=About Us\")");
+            }
+
+            // 9. Check for hamburger menu (mobile nav)
+            Console.WriteLine($"\n[8] Mobile menu indicators:");
+            var hamburger = await Page.Locator("button[aria-label*='menu' i], button[aria-label*='nav' i]").CountAsync();
+            Console.WriteLine($"    Hamburger/menu buttons: {hamburger}");
+
+            Assert.Pass("Diagnostic complete - check console output above");
+        }
+    }
+}

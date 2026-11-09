@@ -1,0 +1,50 @@
+﻿using Microsoft.Playwright;
+using NUnit.Framework;
+using System.Text.RegularExpressions;
+
+namespace Vikram_Solar
+{
+    [Parallelizable(ParallelScope.Self)]
+    [TestFixture]
+    public class Tests : PageTest
+    {
+        [Test]
+        public async Task VerifyTheVsvikramSolarHomePageTitle()
+        {
+            await Page.GotoAsync("https://www.vsvikramsolar.in/");
+
+            // Expect a title "to contain" a substring.
+            await Expect(Page).ToHaveTitleAsync(new Regex("VSVIKRAMSOLAR – Solar | Inverter | Smart CCTV | Water Purifiers"));
+
+ }
+        [Test]
+        public async Task VerifyTheToContactMobileNumberDisplayedOnThePage()
+        {
+            await Page.GotoAsync("https://www.vsvikramsolar.in/");
+
+            string mobileNumber = await Page.GetByText("CALL +91 95917 26143").TextContentAsync();
+            mobileNumber = mobileNumber.Split("+").LastOrDefault();
+            Assert.That(mobileNumber, Is.EqualTo("91 95917 26143"));
+        }
+        [Test]
+        public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingtoTheIntroPage()
+        {
+            await Page.GotoAsync("https://playwright.dev");
+
+            // Expect a title "to contain" a substring.
+            await Expect(Page).ToHaveTitleAsync(new Regex("Playwright"));
+
+            // create a locator
+            var getStarted = Page.Locator("text=Get Started");
+
+            // Expect an attribute "to be strictly equal" to the value.
+            await Expect(getStarted).ToHaveAttributeAsync("href", "/docs/intro");
+
+            // Click the get started link.
+            await getStarted.ClickAsync();
+
+            // Expects the URL to contain intro.
+            await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
+        }
+    }
+}

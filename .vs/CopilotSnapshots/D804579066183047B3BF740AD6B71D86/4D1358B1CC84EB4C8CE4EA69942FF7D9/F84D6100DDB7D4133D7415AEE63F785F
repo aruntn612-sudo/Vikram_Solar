@@ -1,0 +1,96 @@
+﻿using Microsoft.Playwright;
+using NUnit.Framework;
+using System.Text.RegularExpressions;
+
+namespace Vikram_Solar
+{
+    [Parallelizable(ParallelScope.Self)]
+    [TestFixture]
+    public class TestsImproved : PageTest
+    {
+        [Test]
+        public async Task VerifyTheAboutUsLinkPage_Improved()
+        {
+            await Page.GotoAsync("https://www.vsvikramsolar.in/");
+
+            // Use multiple wait strategies for better stability
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Additional wait for dynamic content and JavaScript rendering
+            await Page.WaitForTimeoutAsync(2000);
+
+            // Strategy 1: Try to find by data-testid (original approach)
+            var testIdLocator = Page.GetByTestId("menu-item-31");
+            int elementCount = await testIdLocator.CountAsync();
+
+            if (elementCount > 0)
+            {
+                Console.WriteLine("Found element using testid='menu-item-31'");
+                await testIdLocator.ClickAsync();
+            }
+            else
+            {
+                Console.WriteLine("Element with testid='menu-item-31' not found, trying alternative selectors...");
+
+                // Strategy 2: Find by visible "About Us" text
+                var aboutUsLink = Page.Locator("text=/About\\s*Us/i");
+                int aboutUsCount = await aboutUsLink.CountAsync();
+
+                if (aboutUsCount > 0)
+                {
+                    Console.WriteLine("Found 'About Us' link using text selector");
+                    await aboutUsLink.FirstAsync().ClickAsync();
+                }
+                else
+                {
+                    // Strategy 3: Find by link containing "about" in href
+                    var aboutHrefLink = Page.Locator("a[href*='about' i]");
+                    int aboutHrefCount = await aboutHrefLink.CountAsync();
+
+                    if (aboutHrefCount > 0)
+                    {
+                        Console.WriteLine("Found About link using href selector");
+                        await aboutHrefLink.FirstAsync().ClickAsync();
+                    }
+                    else
+                    {
+                        // Strategy 4: Check if it's in a mobile menu (might need to open hamburger first)
+                        var hamburger = Page.Locator("button[aria-label*='menu' i], .hamburger, [class*='menu-toggle']");
+                        int hamburgerCount = await hamburger.CountAsync();
+
+                        if (hamburgerCount > 0)
+                        {
+                            Console.WriteLine("Menu button found, opening mobile menu...");
+                            await hamburger.FirstAsync().ClickAsync();
+                            await Page.WaitForTimeoutAsync(500);
+
+                            // Try to find About Us again after opening menu
+                            aboutUsLink = Page.Locator("text=/About\\s*Us/i");
+                            aboutUsCount = await aboutUsLink.CountAsync();
+
+                            if (aboutUsCount > 0)
+                            {
+                                Console.WriteLine("Found 'About Us' in mobile menu");
+                                await aboutUsLink.FirstAsync().ClickAsync();
+                            }
+                            else
+                            {
+                                throw new Exception("About Us link not found in any selector strategy");
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception("Menu item with testid='menu-item-31' not found and no alternative selectors worked");
+                        }
+                    }
+                }
+            }
+
+            // Wait for navigation to complete
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Verify we're on the About page
+            await Expect(Page).ToHaveURLAsync(new Regex("about", RegexOptions.IgnoreCase));
+        }
+    }
+}
