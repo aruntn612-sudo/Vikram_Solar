@@ -1,0 +1,8 @@
+Verify.TargetFrameworks=
+Verify.TargetFramework=net10.0
+Verify.DanglingDirectory=C:\Users\Master\source\repos\Vikram_Solar\obj\VerifyDangling\Debug
+Verify.IntermediateDirectory=C:\Users\Master\source\repos\Vikram_Solar\obj\Debug\net10.0\
+Verify.ProjectDirectory=C:\Users\Master\source\repos\Vikram_Solar\
+Verify.ProjectName=VKS_Tests
+Verify.SolutionDirectory=C:\Users\Master\source\repos\Vikram_Solar\
+Verify.SolutionName=VKS
